@@ -2546,6 +2546,7 @@ void CWriter::generateHeader(Module &M) {
       case Intrinsic::rint:
       case Intrinsic::sqrt:
       case Intrinsic::trunc:
+      case Intrinsic::thread_pointer:
         intrinsicsToDefine.push_back(&*I);
         continue;
       }
@@ -4468,6 +4469,45 @@ static bool isSupportedIntegerSize(IntegerType &T) {
 
 void CWriter::printIntrinsicDefinition(FunctionType *funT, unsigned Opcode,
                                        std::string OpName, raw_ostream &Out) {
+  if (Opcode == Intrinsic::thread_pointer) {
+    //
+    // XXX this doesn't belong here
+    //
+    Triple TargetTriple(TheModule->getTargetTriple());
+    Triple::ArchType Arch = TargetTriple.getArch();
+
+    Out << "static __forceinline void *__get_tls(void) {\n";
+
+    switch (Arch) {
+    case Triple::x86_64:
+      Out << "  void *result;\n";
+      Out << "  asm (\"mov %%fs:0, %0\" : \"=r\" (result));\n";
+      break;
+    case Triple::x86:
+      Out << "  void *result;\n";
+      Out << "  asm (\"movl %%gs:0, %0\" : \"=r\" (result));\n";
+      break;
+    case Triple::aarch64:
+      Out << "  void *result;\n";
+      Out << "  asm(\"mrs %0, tpidr_el0\" : \"=r\"(result));\n";
+      break;
+    case Triple::mips:
+    case Triple::mipsel:
+    case Triple::mips64:
+    case Triple::mips64el:
+      Out << "  register void *result asm(\"v1\");\n";
+      Out << "  asm(\"rdhwr %0,$29\n\" : \"=r\"(result));\n";
+      break;
+    default:
+      DBG_ERRS("Unsupported architecture!" << Arch);
+      errorWithMessage("__get_tls: unsupported architecture");
+    }
+
+    Out << "  return result;\n";
+    Out << "}\n";
+    return;
+  }
+
   Type *retT = funT->getReturnType();
   Type *elemT = funT->getParamType(0);
   IntegerType *elemIntT = dyn_cast<IntegerType>(elemT);
@@ -4770,6 +4810,7 @@ bool CWriter::lowerIntrinsics(Function &F) {
           case Intrinsic::stackprotector:
           case Intrinsic::dbg_value:
           case Intrinsic::dbg_declare:
+          case Intrinsic::thread_pointer:
             // We directly implement these intrinsics
             break;
 
@@ -5097,6 +5138,9 @@ bool CWriter::visitBuiltinCall(CallInst &I, Intrinsic::ID ID) {
     return true;
   case Intrinsic::trap:
     Out << "__builtin_trap()";
+    return true;
+  case Intrinsic::thread_pointer:
+    Out << "__get_tls()";
     return true;
   case Intrinsic::uadd_with_overflow:
   case Intrinsic::sadd_with_overflow:
