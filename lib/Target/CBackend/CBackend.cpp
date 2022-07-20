@@ -5095,6 +5095,9 @@ bool CWriter::visitBuiltinCall(CallInst &I, Intrinsic::ID ID) {
     Out << " = ";
     writeOperand(I.getArgOperand(0), ContextCasted);
     return true;
+  case Intrinsic::trap:
+    Out << "__builtin_trap()";
+    return true;
   case Intrinsic::uadd_with_overflow:
   case Intrinsic::sadd_with_overflow:
   case Intrinsic::usub_with_overflow:
@@ -5114,7 +5117,6 @@ bool CWriter::visitBuiltinCall(CallInst &I, Intrinsic::ID ID) {
   case Intrinsic::powi:
   case Intrinsic::rint:
   case Intrinsic::sqrt:
-  case Intrinsic::trap:
   case Intrinsic::trunc:
     return false; // these use the normal function call emission
   }
