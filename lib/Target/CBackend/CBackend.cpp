@@ -4882,9 +4882,6 @@ void CWriter::visitCallInst(CallInst &I) {
     Out << " = ";
   }
 
-  if (I.isTailCall())
-    Out << " /*tail*/ ";
-
   // If this is an indirect call to a struct return function, we need to cast
   // the pointer. Ditto for indirect calls with byval arguments.
   bool NeedsCast =
