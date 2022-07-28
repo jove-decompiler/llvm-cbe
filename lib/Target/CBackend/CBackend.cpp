@@ -70,6 +70,10 @@ static cl::opt<bool> DeclareLocalsLate(
              "Note that "
              "this is not legal in standard C prior to C99."));
 
+static cl::opt<bool> PrintDebugLocations(
+    "cbe-print-debug-locs",
+    cl::desc("Preserve the debug information from the IR with #line"));
+
 extern "C" void LLVMInitializeCBackendTarget() {
   // Register the target.
   RegisterTargetMachine<CTargetMachine> X(TheCBackendTarget);
@@ -3855,7 +3859,8 @@ void CWriter::printBasicBlock(BasicBlock *BB) {
   // Output all of the instructions in the basic block...
   for (BasicBlock::iterator II = BB->begin(), E = --BB->end(); II != E; ++II) {
     DILocation *Loc = (*II).getDebugLoc();
-    if (Loc != nullptr && LastAnnotatedSourceLine != Loc->getLine()) {
+    if (PrintDebugLocations && Loc != nullptr &&
+        LastAnnotatedSourceLine != Loc->getLine()) {
       Out << "#line " << Loc->getLine() << " \"" << Loc->getDirectory() << "/"
           << Loc->getFilename() << "\""
           << "\n";
