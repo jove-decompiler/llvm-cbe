@@ -74,6 +74,10 @@ static cl::opt<bool> PrintDebugLocations(
     "cbe-print-debug-locs",
     cl::desc("Preserve the debug information from the IR with #line"));
 
+static cl::opt<bool> Jove(
+    "cbe-jove",
+    cl::desc("Enable jove-specific modifications"));
+
 extern "C" void LLVMInitializeCBackendTarget() {
   // Register the target.
   RegisterTargetMachine<CTargetMachine> X(TheCBackendTarget);
@@ -1708,6 +1712,9 @@ std::string CWriter::GetValueName(Value *Operand) {
     } else
       VarName += ch;
   }
+
+  if (Jove)
+    return VarName;
 
   return "llvm_cbe_" + VarName;
 }
