@@ -2608,6 +2608,7 @@ void CWriter::generateHeader(Module &M) {
       case Intrinsic::smin:
       case Intrinsic::smax:
       case Intrinsic::abs:
+      case Intrinsic::fshl:
       case Intrinsic::is_constant:
       case Intrinsic::thread_pointer:
         intrinsicsToDefine.push_back(&*I);
@@ -4750,6 +4751,24 @@ void CWriter::printIntrinsicDefinition(FunctionType *funT, unsigned Opcode,
       Out << "  r = a < 0 ? -a : a;\n";
       break;
 
+    case Intrinsic::fshl: {
+      IntegerType *ConcatTy =
+          Type::getIntNTy(funT->getContext(), 2 * elemT->getIntegerBitWidth());
+
+      Out << "  ";
+      printTypeName(Out, ConcatTy);
+      Out << " combined = ((";
+      printTypeName(Out, ConcatTy);
+      Out << ")a << " << elemT->getIntegerBitWidth() << ") | (";
+      printTypeName(Out, elemT);
+      Out << ")b;\n";
+      Out << "combined <<= c % " << elemT->getIntegerBitWidth() << ";\n";
+      Out << "r = (";
+      printTypeName(Out, retT);
+      Out << ")(combined >> " << elemT->getIntegerBitWidth() << ");\n";
+      break;
+    }
+
     case Intrinsic::is_constant:
       Out << "  r = 0 /* llvm.is.constant */;\n";
       break;
@@ -4877,6 +4896,7 @@ bool CWriter::lowerIntrinsics(Function &F) {
           case Intrinsic::smin:
           case Intrinsic::smax:
           case Intrinsic::abs:
+          case Intrinsic::fshl:
           case Intrinsic::is_constant:
           case Intrinsic::thread_pointer:
             // We directly implement these intrinsics
@@ -5202,6 +5222,7 @@ bool CWriter::visitBuiltinCall(CallInst &I, Intrinsic::ID ID) {
   case Intrinsic::smax:
   case Intrinsic::smin:
   case Intrinsic::abs:
+  case Intrinsic::fshl:
   case Intrinsic::is_constant:
     return false; // these use the normal function call emission
   }
