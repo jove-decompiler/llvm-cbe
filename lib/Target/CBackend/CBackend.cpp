@@ -5810,6 +5810,12 @@ void CWriter::visitExtractValueInst(ExtractValueInst &EVI) {
   Out << ")";
 }
 
+void CWriter::visitFreezeInst(FreezeInst &FI) {
+  CurInstr = &FI;
+
+  writeOperand(FI.getOperand(0));
+}
+
 [[noreturn]] void CWriter::errorWithMessage(const char *message) {
 #ifndef NDEBUG
   errs() << message;
