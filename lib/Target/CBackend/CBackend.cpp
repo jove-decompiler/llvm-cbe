@@ -3482,6 +3482,12 @@ void CWriter::declareOneGlobalVariable(GlobalVariable *I) {
     Out << " __HIDDEN__";
   }
 
+  {
+    StringRef Sect = I->getSection();
+    if (!Sect.empty())
+      Out << " __attribute__((__section__(\"" << Sect << "\")))";
+  }
+
   // If the initializer is not null, emit the initializer.  If it is null,
   // we try to avoid emitting large amounts of zeros.  The problem with
   // this, however, occurs when the variable has weak linkage.  In this
