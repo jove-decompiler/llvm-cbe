@@ -4772,7 +4772,7 @@ void CWriter::printIntrinsicDefinition(FunctionType *funT, unsigned Opcode,
     }
 
     case Intrinsic::usub_sat:
-      Out << "  r = a >= b ? a - b : 0\n";
+      Out << "  r = a >= b ? a - b : 0;\n";
       break;
 
     case Intrinsic::is_constant:
