@@ -4609,6 +4609,7 @@ void CWriter::printIntrinsicDefinition(FunctionType *funT, unsigned Opcode,
     case Intrinsic::ctlz:
     case Intrinsic::cttz:
     case Intrinsic::powi:
+    case Intrinsic::abs:
       break;
     }
     printTypeName(Out, funT->getParamType(i), isSigned);
