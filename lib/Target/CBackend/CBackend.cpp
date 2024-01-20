@@ -2609,6 +2609,7 @@ void CWriter::generateHeader(Module &M) {
       case Intrinsic::smax:
       case Intrinsic::abs:
       case Intrinsic::fshl:
+      case Intrinsic::usub_sat:
       case Intrinsic::is_constant:
       case Intrinsic::thread_pointer:
         intrinsicsToDefine.push_back(&*I);
@@ -4769,6 +4770,10 @@ void CWriter::printIntrinsicDefinition(FunctionType *funT, unsigned Opcode,
       break;
     }
 
+    case Intrinsic::usub_sat:
+      Out << "  r = a >= b ? a - b : 0\n";
+      break;
+
     case Intrinsic::is_constant:
       Out << "  r = 0 /* llvm.is.constant */;\n";
       break;
@@ -4897,6 +4902,7 @@ bool CWriter::lowerIntrinsics(Function &F) {
           case Intrinsic::smax:
           case Intrinsic::abs:
           case Intrinsic::fshl:
+          case Intrinsic::usub_sat:
           case Intrinsic::is_constant:
           case Intrinsic::thread_pointer:
             // We directly implement these intrinsics
@@ -5223,6 +5229,7 @@ bool CWriter::visitBuiltinCall(CallInst &I, Intrinsic::ID ID) {
   case Intrinsic::smin:
   case Intrinsic::abs:
   case Intrinsic::fshl:
+  case Intrinsic::usub_sat:
   case Intrinsic::is_constant:
     return false; // these use the normal function call emission
   }
